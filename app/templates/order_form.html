@@ -30,6 +30,16 @@
                 <input type="text" class="form-control" id="delivery_time" name="delivery_time" placeholder="10:00-12:00" required>
             </div>
 
+            <div class="mb-3">
+                <label for="payment_method" class="form-label">Способ оплаты</label>
+                <select class="form-select" id="payment_method" name="payment_method" required>
+                    <option value="" disabled selected>Выберите способ оплаты</option>
+                    <option value="cash">Наличными при встрече</option>
+                    <option value="card_online">Картой онлайн</option>
+                    <option value="card_on_delivery">Картой при встрече</option>
+                </select>
+            </div>
+
             <p class="lead fw-bold text-success">Итоговая стоимость: <span id="total-price">{{ total_cost }}</span> руб.</p>
 
             <button type="submit" class="btn btn-success">Подтвердить заказ</button>

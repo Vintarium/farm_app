@@ -42,6 +42,7 @@ class Order(Base):
     address = Column(String)
     delivery_date = Column(DateTime, nullable=True)
     delivery_time = Column(String, nullable=True)
+    payment_method = Column(String, nullable=True)  # Новое поле для способа оплаты
     created_at = Column(DateTime, default=datetime.utcnow)
     confirmed_at = Column(DateTime, nullable=True)
     delivered_at = Column(DateTime, nullable=True)

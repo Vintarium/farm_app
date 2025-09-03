@@ -41,6 +41,7 @@ class OrderBase(BaseModel):
     quantity: int
     delivery_date: datetime
     delivery_time: Optional[str] = None
+    payment_method: Optional[str] = None # Новое поле
 
 class OrderCreate(OrderBase):
     pass

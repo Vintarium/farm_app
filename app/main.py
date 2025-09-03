@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, Request, Form, HTTPException, status, Uplo
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from typing import Annotated, Optional
 from pathlib import Path
 import os
@@ -102,12 +102,13 @@ class FarmApp:
 
         @self.app.get("/products")
         def list_products(request: Request, db: Annotated[Session, Depends(self.get_db)]):
-            products = crud.get_products(db)
+            products = db.query(models.Product).options(selectinload(models.Product.owner)).all()
             return self.templates.TemplateResponse("products.html", {"request": request, "products": products})
 
         @self.app.get("/products/{product_id}")
         def product_details(request: Request, product_id: int, db: Annotated[Session, Depends(self.get_db)]):
-            product = crud.get_product(db, product_id)
+            product = db.query(models.Product).options(selectinload(models.Product.owner)).filter(models.Product.id == product_id).first()
+            
             if not product:
                 raise HTTPException(status_code=404, detail="Товар не найден")
             
@@ -116,17 +117,25 @@ class FarmApp:
                 {"request": request, "product": product}
             )
 
-        # Маршруты для страницы фермера
         @self.app.get("/farmer")
         def farmer_page(request: Request, db: Annotated[Session, Depends(self.get_db)]):
             if not request.session.get("is_farmer"):
                 return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
 
             user_id = request.session.get("user_id")
-            products = db.query(models.Product).filter(models.Product.owner_id == user_id).all()
+            orders = db.query(models.Order).join(models.Product).filter(
+                models.Product.owner_id == user_id
+            ).options(
+                selectinload(models.Order.product),
+                selectinload(models.Order.customer)
+            ).all()
+
+            pending_orders = [o for o in orders if o.status == "new"]
+            confirmed_orders = [o for o in orders if o.status != "new"]
+
             return self.templates.TemplateResponse(
                 "farmer.html", 
-                {"request": request, "products": products}
+                {"request": request, "pending_orders": pending_orders, "confirmed_orders": confirmed_orders}
             )
         
         @self.app.get("/add-product")
@@ -167,7 +176,6 @@ class FarmApp:
             crud.create_product(db=db, product=product_data, user_id=user_id)
             return RedirectResponse(url="/farmer", status_code=status.HTTP_303_SEE_OTHER)
 
-        # Маршруты для заказов
         @self.app.get("/order/{product_id}")
         def order_page(request: Request, product_id: int, db: Annotated[Session, Depends(self.get_db)]):
             if not request.session.get("user_id"):
@@ -192,7 +200,8 @@ class FarmApp:
             address: str = Form(...),
             quantity: int = Form(...),
             delivery_date: str = Form(...),
-            delivery_time: str = Form(...)
+            delivery_time: str = Form(...),
+            payment_method: str = Form(...)
         ):
             user_id = request.session.get("user_id")
             if not user_id:
@@ -206,11 +215,33 @@ class FarmApp:
                 address=address,
                 quantity=quantity,
                 delivery_date=datetime.strptime(delivery_date, '%Y-%m-%d'),
-                delivery_time=delivery_time
+                delivery_time=delivery_time,
+                payment_method=payment_method
             )
             
             crud.create_order(db=db, order=order_data, customer_id=user_id)
             return RedirectResponse(url="/orders", status_code=status.HTTP_303_SEE_OTHER)
+
+        @self.app.get("/orders")
+        def user_orders_page(request: Request, db: Annotated[Session, Depends(self.get_db)]):
+            if not request.session.get("user_id"):
+                return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+            
+            user_id = request.session.get("user_id")
+            orders = db.query(models.Order).filter(models.Order.customer_id == user_id).options(
+                selectinload(models.Order.product)
+            ).all()
+
+            for order in orders:
+                order.total_price = order.product.price * order.quantity + DELIVERY_COST
+            
+            pending_orders = [o for o in orders if o.status == "new"]
+            history_orders = [o for o in orders if o.status != "new"]
+
+            return self.templates.TemplateResponse(
+                "orders.html", 
+                {"request": request, "pending_orders": pending_orders, "history_orders": history_orders}
+            )
 
 farm_app = FarmApp()
 app = farm_app.app

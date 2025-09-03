@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Мои заказы{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Мои заказы</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <h3>Текущие заказы (ожидают доставки)</h3>
+        {% if pending_orders %}
+        {% for order in pending_orders %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ order.product.name }}</h5>
+                <p class="card-text">Количество: {{ order.quantity }}</p>
+                <p class="card-text">Адрес: {{ order.address }}</p>
+                <p class="card-text">Дата и время доставки: {{ order.delivery_date.strftime('%d.%m.%Y') }} в {{ order.delivery_time }}</p>
+                <p class="card-text">Способ оплаты: {{ order.payment_method }}</p>
+                <p class="card-text fw-bold">Итого: {{ order.total_price }} руб.</p>
+                <span class="badge bg-warning text-dark">Статус: {{ order.status }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>У вас пока нет текущих заказов.</p>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <h3>История заказов</h3>
+        {% if history_orders %}
+        {% for order in history_orders %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ order.product.name }}</h5>
+                <p class="card-text">Количество: {{ order.quantity }}</p>
+                <p class="card-text">Адрес: {{ order.address }}</p>
+                <p class="card-text">Дата и время доставки: {{ order.delivery_date.strftime('%d.%m.%Y') }} в {{ order.delivery_time }}</p>
+                <p class="card-text">Способ оплаты: {{ order.payment_method }}</p>
+                <p class="card-text fw-bold">Итого: {{ order.total_price }} руб.</p>
+                <span class="badge bg-success">Статус: {{ order.status }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>У вас пока нет завершенных заказов.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

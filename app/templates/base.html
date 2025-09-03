@@ -19,6 +19,9 @@
                         <a class="nav-link" href="/products">Товары</a>
                     </li>
                     {% if request.session.get("user_id") %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/orders">Мои заказы</a>
+                    </li>
                     {% if request.session.get("is_farmer") %}
                     <li class="nav-item">
                         <a class="nav-link" href="/farmer">Кабинет фермера</a>

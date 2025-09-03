@@ -49,12 +49,19 @@ def create_order(db: Session, order: schemas.OrderCreate, customer_id: int):
     db_order = models.Order(
         product_id=order.product_id,
         address=order.address,
-        quantity=order.quantity,  # Добавляем количество
-        delivery_date=order.delivery_date, # Добавляем дату доставки
-        delivery_time=order.delivery_time, # Добавляем время доставки
+        quantity=order.quantity,
+        delivery_date=order.delivery_date,
+        delivery_time=order.delivery_time,
+        payment_method=order.payment_method, # Добавляем способ оплаты
         customer_id=customer_id
     )
     db.add(db_order)
     db.commit()
     db.refresh(db_order)
     return db_order
+
+def get_user_orders(db: Session, user_id: int):
+    return db.query(models.Order).filter(models.Order.customer_id == user_id).all()
+
+def get_farmer_orders(db: Session, farmer_id: int):
+    return db.query(models.Order).join(models.Product).filter(models.Product.owner_id == farmer_id).all()
