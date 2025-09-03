@@ -38,6 +38,9 @@ class Product(ProductBase):
 class OrderBase(BaseModel):
     product_id: int
     address: str
+    quantity: int
+    delivery_date: datetime
+    delivery_time: Optional[str] = None
 
 class OrderCreate(OrderBase):
     pass

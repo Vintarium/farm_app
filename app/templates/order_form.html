@@ -7,12 +7,51 @@
 <div class="row">
     <div class="col-md-6 offset-md-3">
         <form method="post" action="/order/{{ product.id }}">
+            <p class="lead">Цена за товар: {{ product.price }} руб.</p>
+            <p class="lead text-success">Стоимость доставки: {{ delivery_cost }} руб.</p>
+
+            <div class="mb-3">
+                <label for="quantity" class="form-label">Количество</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" min="1" value="1" required>
+            </div>
+            
             <div class="mb-3">
                 <label for="address" class="form-label">Адрес доставки</label>
                 <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
             </div>
+
+            <div class="mb-3">
+                <label for="delivery_date" class="form-label">Дата доставки</label>
+                <input type="date" class="form-control" id="delivery_date" name="delivery_date" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="delivery_time" class="form-label">Время доставки (например, 10:00-12:00)</label>
+                <input type="text" class="form-control" id="delivery_time" name="delivery_time" placeholder="10:00-12:00" required>
+            </div>
+
+            <p class="lead fw-bold text-success">Итоговая стоимость: <span id="total-price">{{ total_cost }}</span> руб.</p>
+
             <button type="submit" class="btn btn-success">Подтвердить заказ</button>
         </form>
     </div>
 </div>
+
+<script>
+    const productPrice = {{ product.price | tojson }};
+    const deliveryCost = {{ delivery_cost | tojson }};
+    const quantityInput = document.getElementById('quantity');
+    const totalPriceSpan = document.getElementById('total-price');
+
+    function calculateTotal() {
+        let quantity = parseFloat(quantityInput.value);
+        if (isNaN(quantity)) {
+            quantity = 0;
+        }
+        const total = (productPrice * quantity) + deliveryCost;
+        totalPriceSpan.textContent = total.toFixed(2);
+    }
+
+    quantityInput.addEventListener('input', calculateTotal);
+</script>
 {% endblock %}

@@ -38,7 +38,10 @@ class Order(Base):
     customer_id = Column(Integer, ForeignKey("users.id"))
     product_id = Column(Integer, ForeignKey("products.id"))
     status = Column(String, default="new")
+    quantity = Column(Integer, default=1)
     address = Column(String)
+    delivery_date = Column(DateTime, nullable=True)
+    delivery_time = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     confirmed_at = Column(DateTime, nullable=True)
     delivered_at = Column(DateTime, nullable=True)
@@ -46,7 +49,7 @@ class Order(Base):
     customer = relationship("User", back_populates="orders")
     product = relationship("Product", back_populates="orders")
     review = relationship("Review", back_populates="order", uselist=False)
-
+    
 class Review(Base):
     __tablename__ = "reviews"
 

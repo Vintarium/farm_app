@@ -49,6 +49,9 @@ def create_order(db: Session, order: schemas.OrderCreate, customer_id: int):
     db_order = models.Order(
         product_id=order.product_id,
         address=order.address,
+        quantity=order.quantity,  # Добавляем количество
+        delivery_date=order.delivery_date, # Добавляем дату доставки
+        delivery_time=order.delivery_time, # Добавляем время доставки
         customer_id=customer_id
     )
     db.add(db_order)

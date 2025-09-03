@@ -7,6 +7,7 @@ from typing import Annotated, Optional
 from pathlib import Path
 import os
 import uuid
+from datetime import datetime
 
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -16,6 +17,9 @@ from .database import SessionLocal, engine
 # Создаём папки для хранения файлов, если они ещё не существуют
 Path("static/images").mkdir(parents=True, exist_ok=True)
 models.Base.metadata.create_all(bind=engine)
+
+# Ставка за доставку
+DELIVERY_COST = 5
 
 class FarmApp:
     def __init__(self):
@@ -172,10 +176,12 @@ class FarmApp:
             product = crud.get_product(db, product_id)
             if not product:
                 raise HTTPException(status_code=404, detail="Товар не найден")
-
+            
+            total_cost = product.price + DELIVERY_COST
+            
             return self.templates.TemplateResponse(
                 "order_form.html",
-                {"request": request, "product": product}
+                {"request": request, "product": product, "delivery_cost": DELIVERY_COST, "total_cost": total_cost}
             )
 
         @self.app.post("/order/{product_id}")
@@ -183,7 +189,10 @@ class FarmApp:
             request: Request,
             product_id: int,
             db: Annotated[Session, Depends(self.get_db)],
-            address: str = Form(...)
+            address: str = Form(...),
+            quantity: int = Form(...),
+            delivery_date: str = Form(...),
+            delivery_time: str = Form(...)
         ):
             user_id = request.session.get("user_id")
             if not user_id:
@@ -194,7 +203,10 @@ class FarmApp:
             
             order_data = schemas.OrderCreate(
                 product_id=product_id,
-                address=address
+                address=address,
+                quantity=quantity,
+                delivery_date=datetime.strptime(delivery_date, '%Y-%m-%d'),
+                delivery_time=delivery_time
             )
             
             crud.create_order(db=db, order=order_data, customer_id=user_id)
