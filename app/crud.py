@@ -44,3 +44,14 @@ def create_product(db: Session, product: schemas.ProductCreate, user_id: int):
     db.commit()
     db.refresh(db_product)
     return db_product
+
+def create_order(db: Session, order: schemas.OrderCreate, customer_id: int):
+    db_order = models.Order(
+        product_id=order.product_id,
+        address=order.address,
+        customer_id=customer_id
+    )
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+    return db_order

@@ -101,6 +101,17 @@ class FarmApp:
             products = crud.get_products(db)
             return self.templates.TemplateResponse("products.html", {"request": request, "products": products})
 
+        @self.app.get("/products/{product_id}")
+        def product_details(request: Request, product_id: int, db: Annotated[Session, Depends(self.get_db)]):
+            product = crud.get_product(db, product_id)
+            if not product:
+                raise HTTPException(status_code=404, detail="Товар не найден")
+            
+            return self.templates.TemplateResponse(
+                "product_details.html",
+                {"request": request, "product": product}
+            )
+
         # Маршруты для страницы фермера
         @self.app.get("/farmer")
         def farmer_page(request: Request, db: Annotated[Session, Depends(self.get_db)]):
@@ -138,13 +149,9 @@ class FarmApp:
             user_id = request.session.get("user_id")
             image_url = None
             if image and image.filename:
-                # Создаем уникальное имя файла
                 unique_filename = f"{uuid.uuid4()}_{image.filename}"
                 file_path = Path("static/images") / unique_filename
-
-                # Сохраняем файл
                 file_path.write_bytes(await image.read())
-                
                 image_url = f"/static/images/{unique_filename}"
 
             product_data = schemas.ProductCreate(
@@ -155,6 +162,43 @@ class FarmApp:
             )
             crud.create_product(db=db, product=product_data, user_id=user_id)
             return RedirectResponse(url="/farmer", status_code=status.HTTP_303_SEE_OTHER)
+
+        # Маршруты для заказов
+        @self.app.get("/order/{product_id}")
+        def order_page(request: Request, product_id: int, db: Annotated[Session, Depends(self.get_db)]):
+            if not request.session.get("user_id"):
+                return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+
+            product = crud.get_product(db, product_id)
+            if not product:
+                raise HTTPException(status_code=404, detail="Товар не найден")
+
+            return self.templates.TemplateResponse(
+                "order_form.html",
+                {"request": request, "product": product}
+            )
+
+        @self.app.post("/order/{product_id}")
+        def place_order(
+            request: Request,
+            product_id: int,
+            db: Annotated[Session, Depends(self.get_db)],
+            address: str = Form(...)
+        ):
+            user_id = request.session.get("user_id")
+            if not user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Сначала войдите в систему"
+                )
+            
+            order_data = schemas.OrderCreate(
+                product_id=product_id,
+                address=address
+            )
+            
+            crud.create_order(db=db, order=order_data, customer_id=user_id)
+            return RedirectResponse(url="/orders", status_code=status.HTTP_303_SEE_OTHER)
 
 farm_app = FarmApp()
 app = farm_app.app
