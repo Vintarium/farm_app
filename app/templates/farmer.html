@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Кабинет фермера{% endblock %}
+
+{% block content %}
+<h2 class="text-center">Ваши товары</h2>
+<a href="/add-product" class="btn btn-primary mb-3">Добавить новый товар</a>
+
+<div class="row">
+    {% for product in products %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Цена: {{ product.price }}</h6>
+                <p class="card-text">{{ product.description }}</p>
+                <a href="#" class="btn btn-sm btn-warning">Редактировать</a>
+                <a href="#" class="btn btn-sm btn-danger">Удалить</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-center">У вас пока нет добавленных товаров.</p>
+    {% endfor %}
+</div>
+{% endblock %}

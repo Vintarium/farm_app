@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить товар{% endblock %}
+
+{% block content %}
+<h2 class="text-center">Добавить новый товар</h2>
+<form method="post" action="/add-product" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="name" class="form-label">Название товара</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Описание</label>
+        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="price" class="form-label">Цена</label>
+        <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+    </div>
+    <div class="mb-3">
+        <label for="image" class="form-label">Фото товара</label>
+        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+    </div>
+    <button type="submit" class="btn btn-primary">Добавить</button>
+</form>
+{% endblock %}
